@@ -1,0 +1,129 @@
+{
+  "nav": {
+    "hub": "Hub",
+    "ideas": "Ideas",
+    "youtube": "YouTube",
+    "thumbnails": "Thumbnails",
+    "settings": "Settings",
+    "signIn": "Sign in",
+    "signOut": "Sign out"
+  },
+  "hub": {
+    "title": "mushub",
+    "subtitle": "Your personal command center",
+    "dragHint": "Drag the ⠿ handle to move — resize from corners"
+  },
+  "auth": {
+    "signInTitle": "Sign in to mushub",
+    "signInDesc": "Sign in with Google to sync your data across all your devices.",
+    "signInButton": "Continue with Google",
+    "signOutConfirm": "Sign out?",
+    "signOutDesc": "Your data is safely stored in the cloud.",
+    "cancel": "Cancel",
+    "confirm": "Sign out"
+  },
+  "stats": {
+    "subscribers": "Subscribers",
+    "totalViews": "Total Views",
+    "videos": "Videos",
+    "views30d": "Views (30d)",
+    "subs30d": "Subs (30d)",
+    "watchTime": "Watch time (30d)",
+    "connectYouTube": "Connect YouTube",
+    "addApiKey": "Add your API key in Settings",
+    "studioAnalytics": "Studio Analytics",
+    "connectAnalytics": "Connect Analytics",
+    "analyticsOn": "Analytics ON",
+    "updated": "Updated",
+    "realStats": "Click Connect Analytics for real 30-day stats",
+    "channelNotFound": "Channel not found. Set your handle below.",
+    "apiError": "Could not load stats. Check your API key."
+  },
+  "links": {
+    "title": "Quick Links",
+    "addLink": "Add Link",
+    "linkName": "Link name",
+    "linkUrl": "URL",
+    "add": "Add",
+    "delete": "Remove link"
+  },
+  "todo": {
+    "title": "To-Do",
+    "addItem": "Add a new item...",
+    "noItems": "No items yet. Add one above!",
+    "delete": "Delete item",
+    "complete": "Mark complete"
+  },
+  "video": {
+    "title": "Latest Video",
+    "noVideo": "No videos found",
+    "views": "views",
+    "likes": "likes",
+    "setHandle": "Set channel handle above",
+    "connectApi": "Connect API key above"
+  },
+  "idea": {
+    "title": "Last Idea",
+    "noIdea": "No ideas yet",
+    "viewAll": "View all",
+    "addFirst": "Add your first idea"
+  },
+  "ideas": {
+    "pageTitle": "Ideas & notes",
+    "newIdea": "New Idea",
+    "titlePlaceholder": "Title",
+    "contentPlaceholder": "Write your idea here...",
+    "save": "Save Idea",
+    "yourIdeas": "Your Ideas",
+    "noIdeas": "No ideas yet. Start writing above!",
+    "edit": "Edit",
+    "delete": "Delete",
+    "saveEdit": "Save",
+    "cancel": "Cancel",
+    "syncing": "Syncing..."
+  },
+  "subscribers": {
+    "pageTitle": "Subscriber Counter",
+    "liveCounter": "Live subscriber count",
+    "country": "Country",
+    "description": "Description",
+    "notifications": "Subscriber notifications",
+    "notifOn": "Notifications enabled",
+    "notifOff": "Enable notifications",
+    "notifDenied": "Notifications blocked in browser",
+    "newSub": "New subscriber!",
+    "newSubsCount": "+{count} new subscribers!",
+    "throttleInfo": "Notification frequency adapts to growth speed",
+    "apiOptimized": "API calls are optimized to avoid quota limits"
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Customize your mushub experience",
+    "appearance": "Appearance",
+    "accentColor": "Accent Color",
+    "language": "Language",
+    "api": "API Settings",
+    "youtubeApiKey": "YouTube API Key",
+    "channelHandle": "Channel Handle",
+    "save": "Save",
+    "saved": "Saved!",
+    "about": "About",
+    "version": "Version",
+    "madeWith": "Made with love by",
+    "account": "Account",
+    "signedInAs": "Signed in as",
+    "notSignedIn": "Not signed in",
+    "dataSync": "Data synced across devices"
+  },
+  "disconnect": {
+    "title": "Disconnect Analytics?",
+    "warning": "You will lose access to real-time 30-day stats (views, subscribers, watch time). This data will no longer update until you reconnect.",
+    "cancel": "Keep connected",
+    "confirm": "Disconnect anyway"
+  },
+  "errors": {
+    "generic": "Something went wrong",
+    "retry": "Retry",
+    "offline": "You appear to be offline"
+  }
+}

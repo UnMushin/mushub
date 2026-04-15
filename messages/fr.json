@@ -1,0 +1,129 @@
+{
+  "nav": {
+    "hub": "Accueil",
+    "ideas": "Idées",
+    "youtube": "YouTube",
+    "thumbnails": "Miniatures",
+    "settings": "Paramètres",
+    "signIn": "Connexion",
+    "signOut": "Déconnexion"
+  },
+  "hub": {
+    "title": "mushub",
+    "subtitle": "Votre centre de commande personnel",
+    "dragHint": "Glissez la poignée ⠿ pour déplacer — redimensionnez depuis les coins"
+  },
+  "auth": {
+    "signInTitle": "Connexion à mushub",
+    "signInDesc": "Connectez-vous avec Google pour synchroniser vos données sur tous vos appareils.",
+    "signInButton": "Continuer avec Google",
+    "signOutConfirm": "Se déconnecter ?",
+    "signOutDesc": "Vos données sont sauvegardées dans le cloud.",
+    "cancel": "Annuler",
+    "confirm": "Se déconnecter"
+  },
+  "stats": {
+    "subscribers": "Abonnés",
+    "totalViews": "Vues totales",
+    "videos": "Vidéos",
+    "views30d": "Vues (30j)",
+    "subs30d": "Abonnés (30j)",
+    "watchTime": "Temps de visionnage (30j)",
+    "connectYouTube": "Connecter YouTube",
+    "addApiKey": "Ajoutez votre clé API dans les Paramètres",
+    "studioAnalytics": "Studio Analytics",
+    "connectAnalytics": "Connecter Analytics",
+    "analyticsOn": "Analytics ACTIVÉ",
+    "updated": "Mis à jour",
+    "realStats": "Cliquez sur Connecter Analytics pour les vraies stats 30 jours",
+    "channelNotFound": "Chaîne introuvable. Définissez votre handle ci-dessous.",
+    "apiError": "Impossible de charger les stats. Vérifiez votre clé API."
+  },
+  "links": {
+    "title": "Liens rapides",
+    "addLink": "Ajouter un lien",
+    "linkName": "Nom du lien",
+    "linkUrl": "URL",
+    "add": "Ajouter",
+    "delete": "Supprimer le lien"
+  },
+  "todo": {
+    "title": "À faire",
+    "addItem": "Ajouter un élément...",
+    "noItems": "Aucun élément. Ajoutez-en un !",
+    "delete": "Supprimer",
+    "complete": "Marquer comme terminé"
+  },
+  "video": {
+    "title": "Dernière vidéo",
+    "noVideo": "Aucune vidéo trouvée",
+    "views": "vues",
+    "likes": "likes",
+    "setHandle": "Définissez votre handle ci-dessus",
+    "connectApi": "Connectez votre clé API ci-dessus"
+  },
+  "idea": {
+    "title": "Dernière idée",
+    "noIdea": "Pas encore d'idées",
+    "viewAll": "Voir tout",
+    "addFirst": "Ajoutez votre première idée"
+  },
+  "ideas": {
+    "pageTitle": "Idées & notes",
+    "newIdea": "Nouvelle idée",
+    "titlePlaceholder": "Titre",
+    "contentPlaceholder": "Écrivez votre idée ici...",
+    "save": "Sauvegarder",
+    "yourIdeas": "Vos idées",
+    "noIdeas": "Aucune idée pour l'instant. Commencez à écrire !",
+    "edit": "Modifier",
+    "delete": "Supprimer",
+    "saveEdit": "Sauvegarder",
+    "cancel": "Annuler",
+    "syncing": "Synchronisation..."
+  },
+  "subscribers": {
+    "pageTitle": "Compteur d'abonnés",
+    "liveCounter": "Abonnés en temps réel",
+    "country": "Pays",
+    "description": "Description",
+    "notifications": "Notifications d'abonnés",
+    "notifOn": "Notifications activées",
+    "notifOff": "Activer les notifications",
+    "notifDenied": "Notifications bloquées dans le navigateur",
+    "newSub": "Nouvel abonné !",
+    "newSubsCount": "+{count} nouveaux abonnés !",
+    "throttleInfo": "La fréquence des notifications s'adapte à la vitesse de croissance",
+    "apiOptimized": "Les appels API sont optimisés pour éviter les limites de quota"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "subtitle": "Personnalisez votre expérience mushub",
+    "appearance": "Apparence",
+    "accentColor": "Couleur d'accent",
+    "language": "Langue",
+    "api": "Paramètres API",
+    "youtubeApiKey": "Clé API YouTube",
+    "channelHandle": "Handle de la chaîne",
+    "save": "Sauvegarder",
+    "saved": "Sauvegardé !",
+    "about": "À propos",
+    "version": "Version",
+    "madeWith": "Fait avec amour par",
+    "account": "Compte",
+    "signedInAs": "Connecté en tant que",
+    "notSignedIn": "Non connecté",
+    "dataSync": "Données synchronisées sur tous les appareils"
+  },
+  "disconnect": {
+    "title": "Déconnecter Analytics ?",
+    "warning": "Vous perdrez l'accès aux stats en temps réel sur 30 jours (vues, abonnés, temps de visionnage). Ces données ne se mettront plus à jour jusqu'à reconnexion.",
+    "cancel": "Garder la connexion",
+    "confirm": "Déconnecter quand même"
+  },
+  "errors": {
+    "generic": "Une erreur est survenue",
+    "retry": "Réessayer",
+    "offline": "Vous semblez être hors ligne"
+  }
+}

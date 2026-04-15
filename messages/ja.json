@@ -1,0 +1,15 @@
+{
+  "nav": { "hub": "ホーム", "ideas": "アイデア", "youtube": "YouTube", "thumbnails": "サムネイル", "settings": "設定", "signIn": "ログイン", "signOut": "ログアウト" },
+  "hub": { "title": "mushub", "subtitle": "あなたのパーソナルコマンドセンター", "dragHint": "⠿ ハンドルをドラッグして移動 — 角からリサイズ" },
+  "auth": { "signInTitle": "mushubにログイン", "signInDesc": "Googleでログインしてデータを同期しましょう。", "signInButton": "Googleで続ける", "signOutConfirm": "ログアウトしますか？", "signOutDesc": "データはクラウドに保存されています。", "cancel": "キャンセル", "confirm": "ログアウト" },
+  "stats": { "subscribers": "登録者", "totalViews": "総再生回数", "videos": "動画", "views30d": "再生回数 (30日)", "subs30d": "登録者 (30日)", "watchTime": "視聴時間 (30日)", "connectYouTube": "YouTubeを接続", "addApiKey": "設定でAPIキーを追加", "studioAnalytics": "スタジオ分析", "connectAnalytics": "アナリティクスを接続", "analyticsOn": "アナリティクスON", "updated": "更新済み", "realStats": "アナリティクスを接続して実際の30日間データを取得", "channelNotFound": "チャンネルが見つかりません。", "apiError": "統計を読み込めませんでした。" },
+  "links": { "title": "クイックリンク", "addLink": "リンクを追加", "linkName": "リンク名", "linkUrl": "URL", "add": "追加", "delete": "削除" },
+  "todo": { "title": "やること", "addItem": "新しいアイテムを追加...", "noItems": "アイテムがありません。追加してください！", "delete": "削除", "complete": "完了にする" },
+  "video": { "title": "最新動画", "noVideo": "動画が見つかりません", "views": "再生回数", "likes": "いいね", "setHandle": "上でハンドルを設定", "connectApi": "上でAPIキーを接続" },
+  "idea": { "title": "最新アイデア", "noIdea": "アイデアがまだありません", "viewAll": "すべて見る", "addFirst": "最初のアイデアを追加" },
+  "ideas": { "pageTitle": "アイデア＆ノート", "newIdea": "新しいアイデア", "titlePlaceholder": "タイトル", "contentPlaceholder": "アイデアをここに書いてください...", "save": "保存", "yourIdeas": "あなたのアイデア", "noIdeas": "まだアイデアがありません。", "edit": "編集", "delete": "削除", "saveEdit": "保存", "cancel": "キャンセル", "syncing": "同期中..." },
+  "subscribers": { "pageTitle": "登録者カウンター", "liveCounter": "リアルタイム登録者数", "country": "国", "description": "説明", "notifications": "通知", "notifOn": "通知有効", "notifOff": "通知を有効にする", "notifDenied": "通知がブロックされています", "newSub": "新しい登録者！", "newSubsCount": "+{count}人の新しい登録者！", "throttleInfo": "通知頻度は成長速度に応じて調整されます", "apiOptimized": "APIコールは最適化されています" },
+  "settings": { "title": "設定", "subtitle": "mushubをカスタマイズ", "appearance": "外観", "accentColor": "アクセントカラー", "language": "言語", "api": "API設定", "youtubeApiKey": "YouTube APIキー", "channelHandle": "チャンネルハンドル", "save": "保存", "saved": "保存しました！", "about": "について", "version": "バージョン", "madeWith": "愛を込めて制作", "account": "アカウント", "signedInAs": "ログイン中", "notSignedIn": "未ログイン", "dataSync": "データを同期済み" },
+  "disconnect": { "title": "アナリティクスを切断しますか？", "warning": "30日間のリアルタイムデータへのアクセスが失われます。", "cancel": "接続を維持", "confirm": "切断する" },
+  "errors": { "generic": "エラーが発生しました", "retry": "再試行", "offline": "オフラインのようです" }
+}
