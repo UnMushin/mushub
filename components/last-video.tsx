@@ -13,7 +13,7 @@ interface VideoData {
 }
 
 interface LastVideoProps {
-  apiKey: string
+  apiKey?: string
 }
 
 export function LastVideo({ apiKey }: LastVideoProps) {
