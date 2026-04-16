@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
-import { useSettings } from "@/lib/settings-context"
+import { useTranslations } from "next-intl"
 
 interface VideoIdea {
   id: string
@@ -39,7 +39,7 @@ function StatusIcon({ status }: { status: string }) {
 }
 
 export default function YouTubeIdeasPage() {
-  const { t } = useSettings()
+  const t = useTranslations()
   const [ideas, setIdeas] = useState<VideoIdea[]>([])
   const [newTitle, setNewTitle] = useState("")
   const [newDescription, setNewDescription] = useState("")

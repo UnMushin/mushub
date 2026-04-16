@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Nav } from "@/components/nav"
 import { cn } from "@/lib/utils"
-import { useSettings } from "@/lib/settings-context"
+import { useTranslations } from "next-intl"
 
 type Device = "phone" | "tablet" | "pc" | "tv"
 
@@ -58,7 +58,7 @@ const nicheThumbnails: Record<string, ComparisonThumbnail[]> = {
 const allNiches = Object.keys(nicheThumbnails)
 
 export default function ThumbnailsPage() {
-  const { t } = useSettings()
+  const t = useTranslations()
   const [selectedDevice, setSelectedDevice] = useState<Device>("pc")
   const [thumbnailUrl, setThumbnailUrl] = useState("")
   const [thumbnailTitle, setThumbnailTitle] = useState("Your Video Title Here")
