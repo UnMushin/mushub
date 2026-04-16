@@ -38,7 +38,7 @@ function useKonamiCode(callback: () => void) {
 export default function SettingsPage() {
   const t = useTranslations()
   const { settings, updateAccentColor, updateLanguage } = useSettings()
-  const { user, signIn, signOut, showSignOutWarning, setShowSignOutWarning, updateSettings } = useAuth()
+  const { user, signIn, signOut, showSignOutWarning, setShowSignOutWarning, updateSettings, settings: authSettings } = useAuth()
   const [apiKey, setApiKey] = useState("")
   const [channelHandle, setChannelHandle] = useState("")
   const [saved, setSaved] = useState(false)
@@ -51,9 +51,27 @@ export default function SettingsPage() {
     setTimeout(() => { setEasterEgg(false); document.body.style.animation = "" }, 5000)
   }, []))
 
+  // Chargement initial depuis localStorage (rapide, fonctionne hors connexion)
   useEffect(() => {
     setApiKey(localStorage.getItem("mushub_youtube_api_key") || "")
     setChannelHandle(localStorage.getItem("mushub_channel_handle") || "")
+  }, [])
+
+  // Quand les settings Firestore arrivent (utilisateur connecté), on synchronise
+  // Cela gère : première connexion sur un nouvel appareil, sync multi-appareils
+  useEffect(() => {
+    if (!authSettings) return
+    if (authSettings.youtubeApiKey) {
+      setApiKey(authSettings.youtubeApiKey)
+      localStorage.setItem("mushub_youtube_api_key", authSettings.youtubeApiKey)
+    }
+    if (authSettings.channelHandle) {
+      setChannelHandle(authSettings.channelHandle)
+      localStorage.setItem("mushub_channel_handle", authSettings.channelHandle)
+    }
+  }, [authSettings])
+
+  useEffect(() => {
     const style = document.createElement("style")
     style.textContent = `
       @keyframes confettiFall { to { transform: translateY(100vh) rotate(720deg); opacity: 0; } }

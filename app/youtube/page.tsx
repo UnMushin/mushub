@@ -2,12 +2,17 @@
 
 import { useState, useEffect, useRef } from "react"
 import { Nav } from "@/components/nav"
-import { Plus, Trash2, AlertTriangle, CheckCircle, AlertCircle, Upload, ImageIcon, X } from "lucide-react"
+import { Plus, Trash2, AlertTriangle, CheckCircle, AlertCircle, Upload, ImageIcon, X, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import { useTranslations } from "next-intl"
+import { useAuth } from "@/lib/auth-context"
+import {
+  getYoutubeIdeas, saveYoutubeIdea, deleteYoutubeIdea as deleteYoutubeIdeaFS,
+  YoutubeIdea
+} from "@/lib/firestore"
 
 interface VideoIdea {
   id: string
@@ -38,48 +43,83 @@ function StatusIcon({ status }: { status: string }) {
   return null
 }
 
+// Convertit YoutubeIdea (Firestore) en VideoIdea (local)
+function toVideoIdea(y: YoutubeIdea): VideoIdea {
+  return { ...y, createdAt: new Date(y.createdAt) }
+}
+
 export default function YouTubeIdeasPage() {
   const t = useTranslations()
+  const { user } = useAuth()
   const [ideas, setIdeas] = useState<VideoIdea[]>([])
   const [newTitle, setNewTitle] = useState("")
   const [newDescription, setNewDescription] = useState("")
   const [newThumbnail, setNewThumbnail] = useState("")
   const [isDragging, setIsDragging] = useState(false)
+  const [syncing, setSyncing] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Chargement — Firestore si connecté, sinon localStorage
   useEffect(() => {
-    const stored = localStorage.getItem("mushub_youtube_ideas")
-    if (stored) {
-      setIdeas(JSON.parse(stored))
+    const load = async () => {
+      if (user) {
+        setSyncing(true)
+        const data = await getYoutubeIdeas(user.uid)
+        setIdeas(data.map(toVideoIdea))
+        setSyncing(false)
+      } else {
+        const stored = localStorage.getItem("mushub_youtube_ideas")
+        if (stored) setIdeas(JSON.parse(stored))
+      }
     }
-  }, [])
+    load()
+  }, [user])
 
-  const saveIdeas = (newIdeas: VideoIdea[]) => {
-    setIdeas(newIdeas)
-    localStorage.setItem("mushub_youtube_ideas", JSON.stringify(newIdeas))
+  const persist = (next: VideoIdea[]) => {
+    setIdeas(next)
+    localStorage.setItem("mushub_youtube_ideas", JSON.stringify(next))
   }
 
-  const addIdea = () => {
-    if (newTitle.trim()) {
-      const newIdeas = [
-        {
-          id: Date.now().toString(),
-          title: newTitle.trim(),
-          description: newDescription.trim(),
-          thumbnail: newThumbnail,
-          createdAt: new Date(),
-        },
-        ...ideas,
-      ]
-      saveIdeas(newIdeas)
-      setNewTitle("")
-      setNewDescription("")
-      setNewThumbnail("")
+  const addIdea = async () => {
+    if (!newTitle.trim()) return
+    const ideaData = {
+      title: newTitle.trim(),
+      description: newDescription.trim(),
+      thumbnail: newThumbnail,
+      createdAt: new Date().toISOString(),
+    }
+    const tempId = Date.now().toString()
+    const newIdea: VideoIdea = { id: tempId, ...ideaData, createdAt: new Date() }
+    const next = [newIdea, ...ideas]
+    persist(next)
+    setNewTitle("")
+    setNewDescription("")
+    setNewThumbnail("")
+
+    if (user) {
+      setSyncing(true)
+      try {
+        const realId = await saveYoutubeIdea(user.uid, ideaData)
+        setIdeas(prev => prev.map(i => i.id === tempId ? { ...i, id: realId } : i))
+        const stored = JSON.parse(localStorage.getItem("mushub_youtube_ideas") || "[]") as VideoIdea[]
+        localStorage.setItem("mushub_youtube_ideas", JSON.stringify(
+          stored.map(i => i.id === tempId ? { ...i, id: realId } : i)
+        ))
+      } catch (e) {
+        console.error("Firestore save failed, idea kept locally:", e)
+      } finally {
+        setSyncing(false)
+      }
     }
   }
 
-  const deleteIdea = (id: string) => {
-    saveIdeas(ideas.filter((idea) => idea.id !== id))
+  const deleteIdea = async (id: string) => {
+    if (user) {
+      await deleteYoutubeIdeaFS(user.uid, id)
+      setIdeas(prev => prev.filter(i => i.id !== id))
+    } else {
+      persist(ideas.filter(i => i.id !== id))
+    }
   }
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -138,7 +178,10 @@ export default function YouTubeIdeasPage() {
         <header className="flex items-center justify-between">
           <div className="space-y-1">
             <h1 className="text-2xl font-semibold tracking-tight text-foreground">mushub</h1>
-            <p className="text-sm text-muted-foreground">{t("nav.youtube")}</p>
+            <p className="text-sm text-muted-foreground flex items-center gap-2">
+              {t("nav.youtube")}
+              {syncing && <Loader2 className="h-3 w-3 animate-spin" />}
+            </p>
           </div>
           <Nav />
         </header>
