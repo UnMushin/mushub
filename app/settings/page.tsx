@@ -38,7 +38,7 @@ function useKonamiCode(callback: () => void) {
 export default function SettingsPage() {
   const t = useTranslations()
   const { settings, updateAccentColor, updateLanguage } = useSettings()
-  const { user, signIn, signOut, showSignOutWarning, setShowSignOutWarning } = useAuth()
+  const { user, signIn, signOut, showSignOutWarning, setShowSignOutWarning, updateSettings } = useAuth()
   const [apiKey, setApiKey] = useState("")
   const [channelHandle, setChannelHandle] = useState("")
   const [saved, setSaved] = useState(false)
