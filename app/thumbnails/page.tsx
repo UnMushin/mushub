@@ -106,6 +106,7 @@ export default function ThumbnailsPage() {
         url: newComparisonUrl.trim(),
         title: "Comparison thumbnail",
         channel: "Custom",
+        views: "",
       }
       saveComparisonThumbnails([...comparisonThumbnails, newThumbnail])
       setNewComparisonUrl("")
