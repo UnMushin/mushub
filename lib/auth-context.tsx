@@ -24,6 +24,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [youtubeToken, setYoutubeToken] = useState<string | null>(null)
 
   useEffect(() => {
+    // Safety net: never stay loading forever if Firebase/Firestore hangs
+    const timeout = setTimeout(() => setLoading(false), 5000)
+
     const unsub = onAuthStateChanged(auth, async (u) => {
       setUser(u)
       if (u) {
@@ -36,9 +39,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSettings(null)
         setYoutubeToken(null)
       }
+      clearTimeout(timeout)
       setLoading(false)
     })
-    return unsub
+    return () => { unsub(); clearTimeout(timeout) }
   }, [])
 
   const handleSignIn = async () => {
