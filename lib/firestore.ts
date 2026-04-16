@@ -64,7 +64,7 @@ export interface Idea {
 export async function saveIdea(uid: string, idea: Omit<Idea, "id">) {
   const ref = await addDoc(collection(db, "users", uid, "ideas"), {
     ...idea,
-    createdAt: serverTimestamp(),
+    createdAt: idea.createdAt || new Date().toISOString(),
   })
   return ref.id
 }
@@ -102,7 +102,7 @@ export interface YoutubeIdea {
 export async function saveYoutubeIdea(uid: string, idea: Omit<YoutubeIdea, "id">) {
   const ref = await addDoc(collection(db, "users", uid, "youtubeIdeas"), {
     ...idea,
-    createdAt: serverTimestamp(),
+    createdAt: idea.createdAt || new Date().toISOString(),
   })
   return ref.id
 }

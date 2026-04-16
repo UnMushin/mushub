@@ -63,7 +63,7 @@ export default function Home() {
   const { user, loading: authLoading, signIn, settings } = useAuth()
   const [apiKey, setApiKey] = useState("")
   const [layout, setLayout] = useState<WidgetLayout[]>(defaultLayout)
-  const [isLoaded, setIsLoaded] = useState(false)
+  const [isLoaded, setIsLoaded] = useState(true) // show widgets immediately
   const gridWidth = useGridWidth()
 
   // Responsive cols: 1 col on mobile, 2 on tablet, 12 on desktop
@@ -87,27 +87,31 @@ export default function Home() {
       const key = localStorage.getItem("mushub_youtube_api_key") || settings?.youtubeApiKey || ""
       setApiKey(key)
 
-      if (user) {
-        // Sync API key to Firestore if not there yet
-        if (key && !settings?.youtubeApiKey) {
-          const { saveSettings } = await import("@/lib/firestore")
-          await saveSettings(user.uid, { youtubeApiKey: key, channelHandle: localStorage.getItem("mushub_channel_handle") || "" })
-        }
-        const saved = await getLayout(user.uid)
-        if (saved && saved.length > 0) {
-          setLayout(saved)
-          setIsLoaded(true)
-          return
-        }
-      }
+      // Load local layout immediately so widgets show right away
       const local = localStorage.getItem(LOCAL_KEY)
       if (local) {
         try {
           const parsed = JSON.parse(local)
-          if (parsed.length > 0) { setLayout(parsed) }
+          if (parsed.length > 0) setLayout(parsed)
         } catch {}
       }
-      setIsLoaded(true)
+
+      // Then sync from Firestore in background
+      if (user) {
+        if (key && !settings?.youtubeApiKey) {
+          const { saveSettings } = await import("@/lib/firestore")
+          await saveSettings(user.uid, { youtubeApiKey: key, channelHandle: localStorage.getItem("mushub_channel_handle") || "" })
+        }
+        try {
+          const saved = await getLayout(user.uid)
+          if (saved && saved.length > 0) {
+            setLayout(saved)
+            localStorage.setItem(LOCAL_KEY, JSON.stringify(saved))
+          }
+        } catch (e) {
+          console.error("Layout sync error:", e)
+        }
+      }
     }
     if (!authLoading) load()
   }, [user, authLoading, settings])
