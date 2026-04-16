@@ -7,8 +7,18 @@ import { cn } from "@/lib/utils"
 
 type Device = "phone" | "tablet" | "pc" | "tv"
 
+interface Thumbnail {
+  id: string
+  url: string
+  title: string
+  channel: string
+  views: string
+  avatar: string
+  isUser?: boolean
+}
+
 // Real YouTube thumbnails from top creators
-const comparisons = [
+const comparisons: Thumbnail[] = [
   { id: "mb1", url: "https://i.ytimg.com/vi/XNFpXfaKBuI/hqdefault.jpg", title: "$1 vs $1,000,000 Hotel Room!", channel: "MrBeast", views: "195M", avatar: "MB" },
   { id: "v1",  url: "https://i.ytimg.com/vi/d9uTH0iprVQ/hqdefault.jpg", title: "The Simplest Math Problem No One Can Solve", channel: "Veritasium", views: "28M", avatar: "VE" },
   { id: "mk1", url: "https://i.ytimg.com/vi/fWCcd-LQIKE/hqdefault.jpg", title: "iPhone 16 Pro Review", channel: "MKBHD", views: "8M", avatar: "MK" },
