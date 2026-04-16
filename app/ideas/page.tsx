@@ -42,7 +42,8 @@ export default function IdeasPage() {
 
   const persist = (next: Idea[]) => {
     setIdeas(next)
-    if (!user) localStorage.setItem("mushub_ideas", JSON.stringify(next))
+    // Always keep localStorage as local cache
+    localStorage.setItem("mushub_ideas", JSON.stringify(next))
   }
 
   const addIdea = async () => {
@@ -52,17 +53,31 @@ export default function IdeasPage() {
       content: newContent.trim(),
       createdAt: new Date().toISOString(),
     }
-    if (user) {
-      setSyncing(true)
-      const id = await saveIdea(user.uid, ideaData)
-      setIdeas(prev => [{ id, ...ideaData }, ...prev])
-      setSyncing(false)
-    } else {
-      const newIdea: Idea = { id: Date.now().toString(), ...ideaData }
-      persist([newIdea, ...ideas])
-    }
+    // Optimistic local update immediately (works with or without account)
+    const tempId = Date.now().toString()
+    const newIdea: Idea = { id: tempId, ...ideaData }
+    const next = [newIdea, ...ideas]
+    persist(next)
     setNewTitle("")
     setNewContent("")
+    // Sync to Firestore in background if logged in
+    if (user) {
+      setSyncing(true)
+      try {
+        const realId = await saveIdea(user.uid, ideaData)
+        // Replace temp id with real Firestore id
+        setIdeas(prev => prev.map(i => i.id === tempId ? { ...i, id: realId } : i))
+        // Update localStorage with real id too
+        const stored = JSON.parse(localStorage.getItem("mushub_ideas") || "[]") as Idea[]
+        localStorage.setItem("mushub_ideas", JSON.stringify(
+          stored.map(i => i.id === tempId ? { ...i, id: realId } : i)
+        ))
+      } catch (e) {
+        console.error("Firestore save failed, idea kept locally:", e)
+      } finally {
+        setSyncing(false)
+      }
+    }
   }
 
   const handleDelete = async (id: string) => {

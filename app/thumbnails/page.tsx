@@ -439,11 +439,11 @@ export default function ThumbnailsPage() {
   const nextDevice = () => setSelectedDevice(devices[(devIdx + 1) % devices.length].id)
 
   return (
-    <main className="min-h-screen px-2 py-6 md:px-8 lg:px-12">
-      <div className="mx-auto max-w-5xl space-y-6">
+    <main className="min-h-screen px-4 py-8 md:px-8 lg:px-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="mx-auto max-w-[1400px] space-y-8">
 
         {/* Header */}
-        <header className="flex items-center justify-between px-2">
+        <header className="flex items-center justify-between">
           <div className="space-y-0.5">
             <h1 className="text-xl font-semibold tracking-tight text-foreground">mushub</h1>
             <p className="text-xs text-muted-foreground">Thumbnail preview</p>
@@ -452,7 +452,7 @@ export default function ThumbnailsPage() {
         </header>
 
         {/* Upload + title */}
-        <div className="px-2 space-y-3">
+        <div className="space-y-3">
           <div
             className={cn(
               "border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all duration-200",
@@ -492,7 +492,7 @@ export default function ThumbnailsPage() {
         </div>
 
         {/* Device tabs */}
-        <div className="flex items-center justify-between px-2">
+        <div className="flex items-center justify-between">
           <div className="flex gap-2 flex-wrap">
             {devices.map(({ id, label, icon: Icon }) => (
               <button

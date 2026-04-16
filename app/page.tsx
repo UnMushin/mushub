@@ -128,11 +128,17 @@ export default function Home() {
   }, [user, settings, apiKey])
 
   const handleLayoutChange = useCallback(async (newLayout: any[]) => {
-    // Only save desktop layout
-    if (!isMobile && !isTablet) {
-      setLayout(newLayout)
-      localStorage.setItem(LOCAL_KEY, JSON.stringify(newLayout))
-      if (user) await saveLayout(user.uid, newLayout)
+    // Only persist desktop layout changes triggered by actual user interaction.
+    // Skip auto-fires from initial render or responsive recalculations.
+    if (isMobile || isTablet) return
+    // Guard: if the incoming layout matches the default exactly, skip (initial mount fire)
+    const isDefault = JSON.stringify(newLayout.map(({i,x,y,w,h})=>({i,x,y,w,h})))
+      === JSON.stringify(defaultLayout.map(({i,x,y,w,h})=>({i,x,y,w,h})))
+    if (isDefault) return
+    setLayout(newLayout)
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(newLayout))
+    if (user) {
+      try { await saveLayout(user.uid, newLayout) } catch {}
     }
   }, [user, isMobile, isTablet])
 
