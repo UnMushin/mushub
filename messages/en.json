@@ -18,9 +18,10 @@
     "signInDesc": "Sign in with Google to sync your data across all your devices.",
     "signInButton": "Continue with Google",
     "signOutConfirm": "Sign out?",
-    "signOutDesc": "Your data is safely stored in the cloud.",
+    "signOutDesc": "You will be signed out. Your data stays safely stored in the cloud and will sync back when you sign in again.",
     "cancel": "Cancel",
-    "confirm": "Sign out"
+    "confirm": "Sign out",
+    "signOutWarning": "Sign out of mushub?"
   },
   "stats": {
     "subscribers": "Subscribers",

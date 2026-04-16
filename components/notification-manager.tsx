@@ -1,21 +1,14 @@
 "use client"
 
-import { useEffect, useRef, useCallback } from "react"
+import { useEffect, useRef, useCallback, useState } from "react"
 
-interface NotificationManagerProps {
-  currentCount: number
-  enabled: boolean
-  channelName: string
-}
-
-// Throttle thresholds based on growth speed (subs/min)
 function getThreshold(subsPerMin: number): number {
-  if (subsPerMin < 0.1) return 1       // Slow: every sub
-  if (subsPerMin < 1) return 5         // Moderate: every 5
-  if (subsPerMin < 10) return 10       // Sustained: every 10
-  if (subsPerMin < 50) return 100      // Fast: every 100
-  if (subsPerMin < 200) return 500     // Viral: every 500
-  return 1000                          // Mega viral: every 1000
+  if (subsPerMin < 0.1) return 1
+  if (subsPerMin < 1) return 5
+  if (subsPerMin < 10) return 10
+  if (subsPerMin < 50) return 100
+  if (subsPerMin < 200) return 500
+  return 1000
 }
 
 export function useAdaptiveNotifications(
@@ -26,31 +19,48 @@ export function useAdaptiveNotifications(
   const prevCountRef = useRef<number | null>(null)
   const countHistoryRef = useRef<{ count: number; time: number }[]>([])
   const lastNotifCountRef = useRef<number | null>(null)
-  const permissionRef = useRef<NotificationPermission>("default")
+  const [permission, setPermission] = useState<NotificationPermission>("default")
 
-  // Request permission
+  // Request permission when enabled
   useEffect(() => {
-    if (enabled && typeof window !== "undefined" && "Notification" in window) {
-      Notification.requestPermission().then(p => {
-        permissionRef.current = p
-      })
+    if (!enabled) return
+    if (typeof window === "undefined" || !("Notification" in window)) return
+
+    if (Notification.permission === "granted") {
+      setPermission("granted")
+    } else if (Notification.permission !== "denied") {
+      Notification.requestPermission().then(p => setPermission(p))
+    } else {
+      setPermission("denied")
     }
   }, [enabled])
 
-  const sendNotification = useCallback((gained: number) => {
-    if (permissionRef.current !== "granted") return
+  const sendNotification = useCallback((gained: number, total: number) => {
+    if (permission !== "granted") return
+    if (typeof window === "undefined" || !("Notification" in window)) return
+
     const title = gained === 1
       ? `🎉 New subscriber on ${channelName}!`
-      : `🚀 +${gained} new subscribers on ${channelName}!`
-    new Notification(title, {
-      body: `You now have ${currentCount.toLocaleString()} subscribers`,
-      icon: "/icon.svg",
-      tag: "mushub-subs", // replaces previous notification
-    })
-  }, [channelName, currentCount])
+      : `🚀 +${gained.toLocaleString()} new subscribers on ${channelName}!`
+
+    try {
+      const notif = new Notification(title, {
+        body: `You now have ${total.toLocaleString()} subscribers`,
+        icon: "/icon.svg",
+        tag: "mushub-subs",
+        silent: false,
+      })
+      // Auto-close after 5s
+      setTimeout(() => notif.close(), 5000)
+    } catch (e) {
+      console.warn("Notification failed:", e)
+    }
+  }, [channelName, permission])
 
   useEffect(() => {
-    if (!enabled || currentCount === 0) return
+    if (!enabled || currentCount === 0 || permission !== "granted") return
+
+    // First load — set baseline, don't notify
     if (prevCountRef.current === null) {
       prevCountRef.current = currentCount
       lastNotifCountRef.current = currentCount
@@ -63,32 +73,31 @@ export function useAdaptiveNotifications(
       return
     }
 
-    // Track history for speed calculation (last 5 minutes)
+    // Track velocity
     const now = Date.now()
     countHistoryRef.current.push({ count: currentCount, time: now })
     countHistoryRef.current = countHistoryRef.current.filter(h => now - h.time < 5 * 60 * 1000)
 
-    // Calculate subs/min
     let subsPerMin = 0
     if (countHistoryRef.current.length >= 2) {
       const oldest = countHistoryRef.current[0]
       const newest = countHistoryRef.current[countHistoryRef.current.length - 1]
-      const elapsedMin = (newest.time - oldest.time) / 60000
-      const countDiff = newest.count - oldest.count
-      subsPerMin = elapsedMin > 0 ? countDiff / elapsedMin : 0
+      const elapsed = (newest.time - oldest.time) / 60000
+      subsPerMin = elapsed > 0 ? (newest.count - oldest.count) / elapsed : 0
     }
 
     const threshold = getThreshold(subsPerMin)
-    const lastNotif = lastNotifCountRef.current ?? currentCount
-    const sinceLastNotif = currentCount - lastNotif
+    const sinceLastNotif = currentCount - (lastNotifCountRef.current ?? currentCount)
 
     if (sinceLastNotif >= threshold) {
-      sendNotification(sinceLastNotif)
+      sendNotification(sinceLastNotif, currentCount)
       lastNotifCountRef.current = currentCount
     }
 
     prevCountRef.current = currentCount
-  }, [currentCount, enabled, sendNotification])
+  }, [currentCount, enabled, permission, sendNotification])
+
+  return { permission }
 }
 
 export function NotificationToggle({
@@ -104,12 +113,30 @@ export function NotificationToggle({
   labelOn: string
   labelDenied: string
 }) {
-  const isDenied = typeof window !== "undefined" && "Notification" in window
-    && Notification.permission === "denied"
+  const [perm, setPerm] = useState<NotificationPermission>("default")
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && "Notification" in window) {
+      setPerm(Notification.permission)
+    }
+  }, [enabled])
+
+  const isDenied = perm === "denied"
+
+  const handleClick = async () => {
+    if (isDenied) return
+    if (!enabled && perm !== "granted") {
+      const result = await Notification.requestPermission()
+      setPerm(result)
+      if (result === "granted") onToggle(true)
+      return
+    }
+    onToggle(!enabled)
+  }
 
   return (
     <button
-      onClick={() => !isDenied && onToggle(!enabled)}
+      onClick={handleClick}
       disabled={isDenied}
       className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors ${
         isDenied

@@ -18,7 +18,7 @@
     "signInDesc": "Connectez-vous avec Google pour synchroniser vos données sur tous vos appareils.",
     "signInButton": "Continuer avec Google",
     "signOutConfirm": "Se déconnecter ?",
-    "signOutDesc": "Vos données sont sauvegardées dans le cloud.",
+    "signOutDesc": "Vous allez être déconnecté. Vos données restent en sécurité dans le cloud.",
     "cancel": "Annuler",
     "confirm": "Se déconnecter"
   },

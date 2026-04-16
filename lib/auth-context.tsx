@@ -1,7 +1,7 @@
 "use client"
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react"
-import { User, signInWithPopup, signOut, onAuthStateChanged } from "firebase/auth"
+import { User, signInWithPopup, signOut as firebaseSignOut, onAuthStateChanged } from "firebase/auth"
 import { auth, googleProvider } from "./firebase"
 import { getSettings, saveSettings, UserSettings } from "./firestore"
 
@@ -13,6 +13,8 @@ interface AuthContextType {
   signOut: () => Promise<void>
   updateSettings: (s: Partial<UserSettings>) => Promise<void>
   youtubeToken: string | null
+  showSignOutWarning: boolean
+  setShowSignOutWarning: (v: boolean) => void
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
@@ -22,55 +24,70 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [settings, setSettings] = useState<UserSettings | null>(null)
   const [youtubeToken, setYoutubeToken] = useState<string | null>(null)
+  const [showSignOutWarning, setShowSignOutWarning] = useState(false)
 
   useEffect(() => {
-    // Safety net: never stay loading forever if Firebase/Firestore hangs
     const timeout = setTimeout(() => setLoading(false), 5000)
-
     const unsub = onAuthStateChanged(auth, async (u) => {
+      clearTimeout(timeout)
       setUser(u)
       if (u) {
-        const s = await getSettings(u.uid)
-        setSettings(s)
-        // Try to get YouTube token from credential
-        const token = localStorage.getItem(`yt_token_${u.uid}`)
-        if (token) setYoutubeToken(token)
+        try {
+          const s = await getSettings(u.uid)
+          setSettings(s)
+          const token = localStorage.getItem(`yt_token_${u.uid}`)
+          if (token) setYoutubeToken(token)
+        } catch (e) {
+          console.error("Settings load error:", e)
+        }
       } else {
         setSettings(null)
         setYoutubeToken(null)
       }
-      clearTimeout(timeout)
       setLoading(false)
     })
     return () => { unsub(); clearTimeout(timeout) }
   }, [])
 
   const handleSignIn = async () => {
-    const result = await signInWithPopup(auth, googleProvider)
-    // Capture YouTube OAuth token from Google sign-in
-    const { GoogleAuthProvider } = await import("firebase/auth")
-    const credential = GoogleAuthProvider.credentialFromResult(result)
-    if (credential?.accessToken) {
-      setYoutubeToken(credential.accessToken)
-      localStorage.setItem(`yt_token_${result.user.uid}`, credential.accessToken)
+    try {
+      const result = await signInWithPopup(auth, googleProvider)
+      const { GoogleAuthProvider } = await import("firebase/auth")
+      const credential = GoogleAuthProvider.credentialFromResult(result)
+      if (credential?.accessToken) {
+        setYoutubeToken(credential.accessToken)
+        localStorage.setItem(`yt_token_${result.user.uid}`, credential.accessToken)
+      }
+    } catch (e: any) {
+      // popup closed by user - not an error
+      if (e?.code !== "auth/popup-closed-by-user") console.error(e)
     }
   }
 
   const handleSignOut = async () => {
     if (user) localStorage.removeItem(`yt_token_${user.uid}`)
-    await signOut(auth)
+    await firebaseSignOut(auth)
     setYoutubeToken(null)
+    setShowSignOutWarning(false)
   }
 
   const updateSettings = async (s: Partial<UserSettings>) => {
     if (!user) return
-    const next = { ...settings, ...s }
+    const next = { ...settings, ...s } as UserSettings
     setSettings(next)
     await saveSettings(user.uid, s)
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, settings, signIn: handleSignIn, signOut: handleSignOut, updateSettings, youtubeToken }}>
+    <AuthContext.Provider value={{
+      user, loading, settings,
+      signIn: handleSignIn,
+      signOut: handleSignOut,
+      updateSettings,
+      youtubeToken,
+      showSignOutWarning,
+      setShowSignOutWarning,
+    }}>
       {children}
     </AuthContext.Provider>
   )

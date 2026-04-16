@@ -38,7 +38,7 @@ function useKonamiCode(callback: () => void) {
 export default function SettingsPage() {
   const t = useTranslations()
   const { settings, updateAccentColor, updateLanguage } = useSettings()
-  const { user, signIn, signOut } = useAuth()
+  const { user, signIn, signOut, showSignOutWarning, setShowSignOutWarning } = useAuth()
   const [apiKey, setApiKey] = useState("")
   const [channelHandle, setChannelHandle] = useState("")
   const [saved, setSaved] = useState(false)
@@ -63,9 +63,13 @@ export default function SettingsPage() {
     return () => style.remove()
   }, [])
 
-  const handleSave = () => {
+  const handleSave = async () => {
     localStorage.setItem("mushub_youtube_api_key", apiKey)
     localStorage.setItem("mushub_channel_handle", channelHandle)
+    // Sync to Firestore so other devices get it
+    if (user) {
+      await updateSettings({ youtubeApiKey: apiKey, channelHandle: channelHandle })
+    }
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
@@ -116,7 +120,7 @@ export default function SettingsPage() {
                     <p className="text-xs text-accent mt-0.5">☁️ {t("settings.dataSync")}</p>
                   </div>
                 </div>
-                <Button variant="outline" size="sm" onClick={signOut} className="gap-2 text-xs">
+                <Button variant="outline" size="sm" onClick={() => setShowSignOutWarning(true)} className="gap-2 text-xs">
                   <LogOut className="h-3.5 w-3.5" />{t("nav.signOut")}
                 </Button>
               </div>

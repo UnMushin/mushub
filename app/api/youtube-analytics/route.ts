@@ -18,65 +18,67 @@ async function refreshAccessToken(refreshToken: string): Promise<string | null> 
   return data.access_token || null
 }
 
+async function fetchAnalytics(accessToken: string) {
+  // Use today as endDate and 30 days ago as startDate
+  // This matches YouTube Studio's "last 28 days" logic
+  const endDate = new Date()
+  const startDate = new Date()
+  startDate.setDate(endDate.getDate() - 29) // 30 days inclusive
+  const fmt = (d: Date) => d.toISOString().split("T")[0]
+
+  const url = `https://youtubeanalytics.googleapis.com/v2/reports?` +
+    new URLSearchParams({
+      ids: "channel==MINE",
+      startDate: fmt(startDate),
+      endDate: fmt(endDate), // TODAY - matches Studio
+      metrics: "views,subscribersGained,subscribersLost,estimatedMinutesWatched,averageViewDuration",
+      dimensions: "",
+    })
+
+  return fetch(url, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      // No-cache so we always get today's data
+      "Cache-Control": "no-cache",
+    },
+    cache: "no-store",
+  })
+}
+
 export async function GET(req: NextRequest) {
   let accessToken = req.cookies.get("yt_access_token")?.value
   const refreshToken = req.cookies.get("yt_refresh_token")?.value
 
-  // Refresh token if needed
   if (!accessToken && refreshToken) {
     accessToken = (await refreshAccessToken(refreshToken)) ?? undefined
     if (!accessToken) {
       return NextResponse.json({ error: "not_authenticated" }, { status: 401 })
     }
   }
-
   if (!accessToken) {
     return NextResponse.json({ error: "not_authenticated" }, { status: 401 })
   }
 
-  // Calculate 30-day range
-  const endDate = new Date()
-  const startDate = new Date()
-  startDate.setDate(endDate.getDate() - 30)
-  const fmt = (d: Date) => d.toISOString().split("T")[0]
+  let analyticsRes = await fetchAnalytics(accessToken)
 
-  // Fetch views + subscribers from YouTube Analytics API
-  const analyticsRes = await fetch(
-    `https://youtubeanalytics.googleapis.com/v2/reports?` +
-    new URLSearchParams({
-      ids: "channel==MINE",
-      startDate: fmt(startDate),
-      endDate: fmt(endDate),
-      metrics: "views,subscribersGained,subscribersLost,estimatedMinutesWatched",
-      dimensions: "",
-    }),
-    {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    }
-  )
+  // Token expired mid-session — refresh and retry
+  if (analyticsRes.status === 401 && refreshToken) {
+    const newToken = await refreshAccessToken(refreshToken)
+    if (!newToken) return NextResponse.json({ error: "token_expired" }, { status: 401 })
+    analyticsRes = await fetchAnalytics(newToken)
+    const data = await analyticsRes.json()
+    const response = NextResponse.json(parseAnalytics(data))
+    response.cookies.set("yt_access_token", newToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 3600,
+    })
+    return response
+  }
 
   if (!analyticsRes.ok) {
     const err = await analyticsRes.json()
-    // If token expired mid-session
-    if (analyticsRes.status === 401 && refreshToken) {
-      const newToken = await refreshAccessToken(refreshToken)
-      if (!newToken) return NextResponse.json({ error: "token_expired" }, { status: 401 })
-      // Retry with new token
-      const retry = await fetch(
-        `https://youtubeanalytics.googleapis.com/v2/reports?` +
-        new URLSearchParams({
-          ids: "channel==MINE",
-          startDate: fmt(startDate),
-          endDate: fmt(endDate),
-          metrics: "views,subscribersGained,subscribersLost,estimatedMinutesWatched",
-        }),
-        { headers: { Authorization: `Bearer ${newToken}` } }
-      )
-      const retryData = await retry.json()
-      const response = NextResponse.json(parseAnalytics(retryData))
-      response.cookies.set("yt_access_token", newToken, { httpOnly: true, path: "/" })
-      return response
-    }
     return NextResponse.json({ error: err.error?.message || "analytics_failed" }, { status: 500 })
   }
 
@@ -86,12 +88,13 @@ export async function GET(req: NextRequest) {
 
 function parseAnalytics(data: any) {
   const row = data.rows?.[0]
-  if (!row) return { views30d: 0, subsGained: 0, subsLost: 0, watchMinutes: 0 }
+  if (!row) return { views30d: 0, subsGained: 0, subsLost: 0, netSubs: 0, watchMinutes: 0, avgViewDuration: 0 }
   return {
-    views30d: row[0] || 0,
-    subsGained: row[1] || 0,
-    subsLost: row[2] || 0,
-    watchMinutes: row[3] || 0,
-    netSubs: (row[1] || 0) - (row[2] || 0),
+    views30d: Math.round(row[0] || 0),
+    subsGained: Math.round(row[1] || 0),
+    subsLost: Math.round(row[2] || 0),
+    netSubs: Math.round((row[1] || 0) - (row[2] || 0)),
+    watchMinutes: Math.round(row[3] || 0),
+    avgViewDuration: Math.round(row[4] || 0),
   }
 }

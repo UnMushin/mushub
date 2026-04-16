@@ -11,6 +11,17 @@ const nextConfig = {
       { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
     ],
   },
+  // Allow i.ytimg.com in img tags (not next/image)
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+        ],
+      },
+    ]
+  },
 }
 
 export default withNextIntl(nextConfig)
