@@ -1,37 +1,98 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Plus, Trash2, Pencil, Check, X, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Nav } from "@/components/nav"
 import { useTranslations } from "next-intl"
-import { useIdeas } from "@/lib/ideas-context"
-import { Idea } from "@/lib/firestore"
+import { useAuth } from "@/lib/auth-context"
+import {
+  getIdeas, saveIdea, updateIdea, deleteIdea as deleteIdeaFS,
+  Idea
+} from "@/lib/firestore"
 
 export default function IdeasPage() {
   const t = useTranslations()
-  const { ideas, syncing, addIdea: ctxAddIdea, updateIdea: ctxUpdateIdea, deleteIdea: ctxDeleteIdea } = useIdeas()
+  const { user } = useAuth()
+  const [ideas, setIdeas] = useState<Idea[]>([])
   const [newTitle, setNewTitle] = useState("")
   const [newContent, setNewContent] = useState("")
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editTitle, setEditTitle] = useState("")
   const [editContent, setEditContent] = useState("")
+  const [syncing, setSyncing] = useState(false)
+
+  // Load ideas — Firestore if logged in, else localStorage
+  useEffect(() => {
+    const load = async () => {
+      if (user) {
+        setSyncing(true)
+        const data = await getIdeas(user.uid)
+        setIdeas(data)
+        setSyncing(false)
+      } else {
+        const stored = localStorage.getItem("mushub_ideas")
+        if (stored) setIdeas(JSON.parse(stored))
+      }
+    }
+    load()
+  }, [user])
+
+  const persist = (next: Idea[]) => {
+    setIdeas(next)
+    // Always keep localStorage as local cache
+    localStorage.setItem("mushub_ideas", JSON.stringify(next))
+  }
 
   const addIdea = async () => {
     if (!newTitle.trim() && !newContent.trim()) return
-    await ctxAddIdea({
+    const ideaData = {
       title: newTitle.trim() || "Untitled",
       content: newContent.trim(),
       createdAt: new Date().toISOString(),
-    })
+    }
+    // Optimistic local update immediately (works with or without account)
+    const tempId = Date.now().toString()
+    const newIdea: Idea = { id: tempId, ...ideaData }
+    const next = [newIdea, ...ideas]
+    persist(next)
     setNewTitle("")
     setNewContent("")
+    // Sync to Firestore in background if logged in
+    if (user) {
+      setSyncing(true)
+      try {
+        const realId = await saveIdea(user.uid, ideaData)
+        // Replace temp id with real Firestore id
+        setIdeas(prev => prev.map(i => i.id === tempId ? { ...i, id: realId } : i))
+        // Update localStorage with real id too
+        const stored = JSON.parse(localStorage.getItem("mushub_ideas") || "[]") as Idea[]
+        localStorage.setItem("mushub_ideas", JSON.stringify(
+          stored.map(i => i.id === tempId ? { ...i, id: realId } : i)
+        ))
+      } catch (e) {
+        console.error("Firestore save failed, idea kept locally:", e)
+      } finally {
+        setSyncing(false)
+      }
+    }
   }
 
   const handleDelete = async (id: string) => {
-    await ctxDeleteIdea(id)
+    // Optimistic removal immediately (works logged in or not)
+    const next = ideas.filter(i => i.id !== id)
+    persist(next) // updates state + localStorage
+    if (user) {
+      try { await deleteIdeaFS(user.uid, id) } catch (e) {
+        console.error("Delete failed:", e)
+        // Rollback if Firestore delete fails
+        persist([...next, ideas.find(i => i.id === id)!].sort(
+          (a, b) => b.createdAt.localeCompare(a.createdAt)
+        ))
+      }
+    }
   }
 
   const startEdit = (idea: Idea) => {
@@ -42,7 +103,13 @@ export default function IdeasPage() {
 
   const saveEdit = async () => {
     if (!editingId) return
-    await ctxUpdateIdea(editingId, { title: editTitle, content: editContent })
+    const updates = { title: editTitle, content: editContent }
+    if (user) {
+      await updateIdea(user.uid, editingId, updates)
+      setIdeas(prev => prev.map(i => i.id === editingId ? { ...i, ...updates } : i))
+    } else {
+      persist(ideas.map(i => i.id === editingId ? { ...i, ...updates } : i))
+    }
     setEditingId(null)
   }
 

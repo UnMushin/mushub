@@ -54,12 +54,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const result = await signInWithPopup(auth, googleProvider)
       const { GoogleAuthProvider } = await import("firebase/auth")
       const credential = GoogleAuthProvider.credentialFromResult(result)
+      // Set user + token immediately — don't wait for onAuthStateChanged
+      setUser(result.user)
       if (credential?.accessToken) {
         setYoutubeToken(credential.accessToken)
         localStorage.setItem(`yt_token_${result.user.uid}`, credential.accessToken)
+        localStorage.setItem("mushub_yt_oauth_token", credential.accessToken)
       }
+      // Load settings right away so widgets get data immediately
+      try {
+        const s = await getSettings(result.user.uid)
+        setSettings(s)
+      } catch {}
     } catch (e: any) {
-      // popup closed by user - not an error
       if (e?.code !== "auth/popup-closed-by-user") console.error(e)
     }
   }

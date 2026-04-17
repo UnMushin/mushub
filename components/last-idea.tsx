@@ -1,17 +1,32 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Lightbulb, ChevronDown, ChevronUp } from "lucide-react"
 import Link from "next/link"
 import { useTranslations } from "next-intl"
-import { useIdeas } from "@/lib/ideas-context"
+import { useAuth } from "@/lib/auth-context"
+import { getIdeas, Idea } from "@/lib/firestore"
 
 interface LastIdeaProps { apiKey?: string }
 
 export function LastIdea(_props: LastIdeaProps) {
   const t = useTranslations()
-  const { ideas } = useIdeas()
+  const { user } = useAuth()
+  const [ideas, setIdeas] = useState<Idea[]>([])
   const [showHistory, setShowHistory] = useState(false)
+
+  useEffect(() => {
+    const load = async () => {
+      if (user) {
+        const data = await getIdeas(user.uid)
+        setIdeas(data)
+      } else {
+        const stored = localStorage.getItem("mushub_ideas")
+        if (stored) setIdeas(JSON.parse(stored))
+      }
+    }
+    load()
+  }, [user])
 
   const lastIdea = ideas[0] ?? null
   const history = ideas.slice(1)

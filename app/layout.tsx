@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { SettingsProvider } from '@/lib/settings-context'
 import { AuthProvider } from '@/lib/auth-context'
-import { IdeasProvider } from '@/lib/ideas-context'
 import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getMessages } from 'next-intl/server'
 import './globals.css'
@@ -34,9 +33,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <NextIntlClientProvider locale={locale} messages={messages}>
           <AuthProvider>
             <SettingsProvider>
-              <IdeasProvider>
-                {children}
-              </IdeasProvider>
+              {children}
             </SettingsProvider>
           </AuthProvider>
         </NextIntlClientProvider>
