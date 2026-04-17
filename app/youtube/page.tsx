@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useRef } from "react"
 import { Nav } from "@/components/nav"
 import { Plus, Trash2, AlertTriangle, CheckCircle, AlertCircle, Upload, ImageIcon, X, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -8,8 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import { useTranslations } from "next-intl"
-import { useAuth } from "@/lib/auth-context"
-import { getYoutubeIdeas, saveYoutubeIdea, deleteYoutubeIdea, YoutubeIdea } from "@/lib/firestore"
+import { useIdeas } from "@/lib/ideas-context"
 
 interface VideoIdea {
   id: string
@@ -42,84 +41,30 @@ function StatusIcon({ status }: { status: string }) {
 
 export default function YouTubeIdeasPage() {
   const t = useTranslations()
-  const { user, loading } = useAuth()
-  const [ideas, setIdeas] = useState<VideoIdea[]>([])
+  const { youtubeIdeas, syncing, addYoutubeIdea, deleteYoutubeIdea: ctxDeleteYoutubeIdea } = useIdeas()
+  // Adapter YoutubeIdea (createdAt: string) → VideoIdea (createdAt: Date)
+  const ideas: VideoIdea[] = youtubeIdeas.map(i => ({ ...i, createdAt: new Date(i.createdAt) }))
   const [newTitle, setNewTitle] = useState("")
   const [newDescription, setNewDescription] = useState("")
   const [newThumbnail, setNewThumbnail] = useState("")
   const [isDragging, setIsDragging] = useState(false)
-  const [syncing, setSyncing] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-
-  // Attend que Firebase ait résolu l'état auth AVANT de charger les données
-  useEffect(() => {
-    if (loading) return
-    const load = async () => {
-      if (user) {
-        setSyncing(true)
-        try {
-          const data = await getYoutubeIdeas(user.uid)
-          // YoutubeIdea.createdAt est string ISO, VideoIdea.createdAt est Date
-          setIdeas(data.map(d => ({ ...d, createdAt: new Date(d.createdAt) })))
-        } catch (e) {
-          console.error("Firestore load error:", e)
-          const stored = localStorage.getItem("mushub_youtube_ideas")
-          if (stored) setIdeas(JSON.parse(stored))
-        } finally {
-          setSyncing(false)
-        }
-      } else {
-        const stored = localStorage.getItem("mushub_youtube_ideas")
-        if (stored) setIdeas(JSON.parse(stored))
-      }
-    }
-    load()
-  }, [user, loading])
-
-  const persist = (next: VideoIdea[]) => {
-    setIdeas(next)
-    localStorage.setItem("mushub_youtube_ideas", JSON.stringify(next))
-  }
 
   const addIdea = async () => {
     if (!newTitle.trim()) return
-    const ideaData = {
+    await addYoutubeIdea({
       title: newTitle.trim(),
       description: newDescription.trim(),
       thumbnail: newThumbnail,
       createdAt: new Date().toISOString(),
-    }
-    const tempId = Date.now().toString()
-    const newIdea: VideoIdea = { id: tempId, ...ideaData, createdAt: new Date() }
-    persist([newIdea, ...ideas])
+    })
     setNewTitle("")
     setNewDescription("")
     setNewThumbnail("")
-
-    if (user) {
-      setSyncing(true)
-      try {
-        const realId = await saveYoutubeIdea(user.uid, ideaData)
-        setIdeas(prev => prev.map(i => i.id === tempId ? { ...i, id: realId } : i))
-        const stored = JSON.parse(localStorage.getItem("mushub_youtube_ideas") || "[]") as VideoIdea[]
-        localStorage.setItem("mushub_youtube_ideas", JSON.stringify(
-          stored.map(i => i.id === tempId ? { ...i, id: realId } : i)
-        ))
-      } catch (e) {
-        console.error("Firestore save failed:", e)
-      } finally {
-        setSyncing(false)
-      }
-    }
   }
 
   const deleteIdea = async (id: string) => {
-    if (user) {
-      await deleteYoutubeIdea(user.uid, id)
-      setIdeas(prev => prev.filter(i => i.id !== id))
-    } else {
-      persist(ideas.filter(i => i.id !== id))
-    }
+    await ctxDeleteYoutubeIdea(id)
   }
 
   const handleDragOver = (e: React.DragEvent) => {
