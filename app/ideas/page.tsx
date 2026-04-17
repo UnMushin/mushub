@@ -15,7 +15,7 @@ import {
 
 export default function IdeasPage() {
   const t = useTranslations()
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
   const [ideas, setIdeas] = useState<Idea[]>([])
   const [newTitle, setNewTitle] = useState("")
   const [newContent, setNewContent] = useState("")
@@ -24,21 +24,29 @@ export default function IdeasPage() {
   const [editContent, setEditContent] = useState("")
   const [syncing, setSyncing] = useState(false)
 
-  // Load ideas — Firestore if logged in, else localStorage
+  // Attend que Firebase ait résolu l'état auth AVANT de charger les données
   useEffect(() => {
+    if (loading) return
     const load = async () => {
       if (user) {
         setSyncing(true)
-        const data = await getIdeas(user.uid)
-        setIdeas(data)
-        setSyncing(false)
+        try {
+          const data = await getIdeas(user.uid)
+          setIdeas(data)
+        } catch (e) {
+          console.error("Firestore load error:", e)
+          const stored = localStorage.getItem("mushub_ideas")
+          if (stored) setIdeas(JSON.parse(stored))
+        } finally {
+          setSyncing(false)
+        }
       } else {
         const stored = localStorage.getItem("mushub_ideas")
         if (stored) setIdeas(JSON.parse(stored))
       }
     }
     load()
-  }, [user])
+  }, [user, loading])
 
   const persist = (next: Idea[]) => {
     setIdeas(next)

@@ -9,10 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { cn } from "@/lib/utils"
 import { useTranslations } from "next-intl"
 import { useAuth } from "@/lib/auth-context"
-import {
-  getYoutubeIdeas, saveYoutubeIdea, deleteYoutubeIdea as deleteYoutubeIdeaFS,
-  YoutubeIdea
-} from "@/lib/firestore"
+import { getYoutubeIdeas, saveYoutubeIdea, deleteYoutubeIdea, YoutubeIdea } from "@/lib/firestore"
 
 interface VideoIdea {
   id: string
@@ -43,14 +40,9 @@ function StatusIcon({ status }: { status: string }) {
   return null
 }
 
-// Convertit YoutubeIdea (Firestore) en VideoIdea (local)
-function toVideoIdea(y: YoutubeIdea): VideoIdea {
-  return { ...y, createdAt: new Date(y.createdAt) }
-}
-
 export default function YouTubeIdeasPage() {
   const t = useTranslations()
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
   const [ideas, setIdeas] = useState<VideoIdea[]>([])
   const [newTitle, setNewTitle] = useState("")
   const [newDescription, setNewDescription] = useState("")
@@ -59,21 +51,30 @@ export default function YouTubeIdeasPage() {
   const [syncing, setSyncing] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Chargement — Firestore si connecté, sinon localStorage
+  // Attend que Firebase ait résolu l'état auth AVANT de charger les données
   useEffect(() => {
+    if (loading) return
     const load = async () => {
       if (user) {
         setSyncing(true)
-        const data = await getYoutubeIdeas(user.uid)
-        setIdeas(data.map(toVideoIdea))
-        setSyncing(false)
+        try {
+          const data = await getYoutubeIdeas(user.uid)
+          // YoutubeIdea.createdAt est string ISO, VideoIdea.createdAt est Date
+          setIdeas(data.map(d => ({ ...d, createdAt: new Date(d.createdAt) })))
+        } catch (e) {
+          console.error("Firestore load error:", e)
+          const stored = localStorage.getItem("mushub_youtube_ideas")
+          if (stored) setIdeas(JSON.parse(stored))
+        } finally {
+          setSyncing(false)
+        }
       } else {
         const stored = localStorage.getItem("mushub_youtube_ideas")
         if (stored) setIdeas(JSON.parse(stored))
       }
     }
     load()
-  }, [user])
+  }, [user, loading])
 
   const persist = (next: VideoIdea[]) => {
     setIdeas(next)
@@ -90,8 +91,7 @@ export default function YouTubeIdeasPage() {
     }
     const tempId = Date.now().toString()
     const newIdea: VideoIdea = { id: tempId, ...ideaData, createdAt: new Date() }
-    const next = [newIdea, ...ideas]
-    persist(next)
+    persist([newIdea, ...ideas])
     setNewTitle("")
     setNewDescription("")
     setNewThumbnail("")
@@ -106,7 +106,7 @@ export default function YouTubeIdeasPage() {
           stored.map(i => i.id === tempId ? { ...i, id: realId } : i)
         ))
       } catch (e) {
-        console.error("Firestore save failed, idea kept locally:", e)
+        console.error("Firestore save failed:", e)
       } finally {
         setSyncing(false)
       }
@@ -115,7 +115,7 @@ export default function YouTubeIdeasPage() {
 
   const deleteIdea = async (id: string) => {
     if (user) {
-      await deleteYoutubeIdeaFS(user.uid, id)
+      await deleteYoutubeIdea(user.uid, id)
       setIdeas(prev => prev.filter(i => i.id !== id))
     } else {
       persist(ideas.filter(i => i.id !== id))
