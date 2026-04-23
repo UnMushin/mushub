@@ -1,3 +1,4 @@
+export const runtime = "edge"
 import { NextRequest, NextResponse } from "next/server"
 
 const CLIENT_ID = process.env.YOUTUBE_CLIENT_ID!
